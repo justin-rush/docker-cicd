@@ -1,27 +1,34 @@
 
 pipeline {
    agent any
-   stage('Preparation') {
-     steps {
-       checkout scm
-       sh "git rev-parse --short HEAD > .git/commit-id"
-       commit_id = readFile('.git/commit-id').trim()
-     }
-   }
    stages{
+     stage('Preparation') {
+       steps {
+         checkout scm
+         sh "git rev-parse --short HEAD > .git/commit-id"
+         commit_id = readFile('.git/commit-id').trim()
+       }
+     }
      stage("DB and SQ in parallel") {
        parallel {
          stage('dockerbuild') {
-           def app = docker.build("yanivomc/docker-nodejs-demo:${commit_id}", './basics')
-     
+           steps {
+             script {
+               def app = docker.build("yanivomc/docker-nodejs-demo:${commit_id}", './basics')
+             }
+           } 
          }
          stage('sonarqube tests') {
-           echo "this is the sonarqube build step"
+           steps {
+             echo "this is the sonarqube build step"
+           }
          }                                     
        }
      }
+     stage('docker build/push') {            
+       steps {
+         echo "this is the docker build/push step"
+       }
+     }     
    }
-   stage('docker build/push') {            
-     echo "this is the docker build/push step"
-   }     
 }      
