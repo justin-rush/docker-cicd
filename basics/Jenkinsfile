@@ -1,12 +1,14 @@
 
 pipeline {
-   stages{
-     stage('Preparation') {
-       def commit_id
+   agent any
+   stage('Preparation') {
+     steps {
        checkout scm
        sh "git rev-parse --short HEAD > .git/commit-id"
        commit_id = readFile('.git/commit-id').trim()
      }
+   }
+   stages{
      stage("DB and SQ in parallel") {
        parallel {
          stage('dockerbuild') {
@@ -18,8 +20,8 @@ pipeline {
          }                                     
        }
      }
-     stage('docker build/push') {            
-       echo "this is the docker build/push step"
-     }     
    }
+   stage('docker build/push') {            
+     echo "this is the docker build/push step"
+   }     
 }      
